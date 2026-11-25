@@ -26,8 +26,7 @@ description: Final stage of the new-service scaffold flow — recaps answers, ru
 5. If stage 4 flagged `docker-integration-test` as removable, remind them
    of that now that the file actually exists on disk to edit.
 
-This is the only stage that touches the filesystem. If anything in stages
-1-4 needs revisiting after seeing the generated output (wrong port, wrong
-infra choice), re-run `backend/script/new-service.sh` with `--force` rather than
-hand-patching the generated files — that keeps the generated output
-reproducible from the recorded answers.
+This is the only stage that touches the filesystem. To regenerate with revised
+answers, use a new destination or get explicit authorization to replace a
+marked scaffold with `--force`. Unmarked directories and Git repositories
+require a fresh destination.

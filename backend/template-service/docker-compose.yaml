@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile
     container_name: TODO-service-name
     ports:
-      - "8080:8080"
+      - "TODO-service-port:TODO-service-port"
     environment:
       - CONFIG_FILE=/app/config/config.docker-compose.yaml
     volumes:
@@ -19,7 +19,7 @@ services:
       - service-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health/liveness"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:TODO-service-port/health/liveness"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -35,7 +35,7 @@ services:
 
   # --- Cache / session store — enable if your service needs Redis/Valkey session,
   # rate-limit, or distributed-lock state (checklist: --cache redis|valkey) ---
-  # >>> CACHE
+  # >>> REDIS
   # redis:
   #   image: redis:7-alpine
   #   command: redis-server --requirepass password --appendonly yes
@@ -46,12 +46,29 @@ services:
   #   networks:
   #     - service-network
   #   healthcheck:
-  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+  #     test: ["CMD", "redis-cli", "-a", "password", "ping"]
   #     interval: 10s
   #     timeout: 3s
   #     retries: 5
   #   restart: unless-stopped
-  # <<< CACHE
+  # <<< REDIS
+  # >>> VALKEY
+  # redis:
+  #   image: valkey/valkey:8-alpine
+  #   command: valkey-server --requirepass password --appendonly yes
+  #   ports:
+  #     - "${REDIS_PORT:-6379}:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - service-network
+  #   healthcheck:
+  #     test: ["CMD", "valkey-cli", "-a", "password", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+  #   restart: unless-stopped
+  # <<< REDIS
 
   # --- Relational DB — enable if your service persists data to Postgres
   # (checklist: --db postgres) ---
@@ -90,6 +107,8 @@ services:
   #     MINIO_ROOT_PASSWORD: minioadmin
   #   volumes:
   #     - minio-data:/data
+  #   networks:
+  #     - service-network
   #   healthcheck:
   #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
   #     interval: 10s
@@ -146,7 +165,7 @@ services:
   # >>> MOCKOON
   # mockoon:
   #   image: mockoon/cli:latest
-  #   command: ["--data", "/data/scenario.json", "--port", "3000"]
+  #   command: ["--data", "/data/downstreams.json", "--port", "3000"]
   #   volumes:
   #     - ./test/integration/mockoon:/data:ro
   #   ports:

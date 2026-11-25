@@ -1,0 +1,63 @@
+name: Backend scaffold
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-scaffold.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-scaffold.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose version
+      - run: python3 -B -m unittest discover -s backend/script/tests -v
+
+  runtime:
+    if: github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch
+    runs-on: [self-hosted, linux, backend-scaffold]
+    timeout-minutes: 20
+    env:
+      GOPRIVATE: gitlab.awesome-poc-th.com
+      GIT_TERMINAL_PROMPT: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate full-option service
+        run: |
+          work_dir="$(mktemp -d)"
+          echo "SCAFFOLD_WORK_DIR=$work_dir" >> "$GITHUB_ENV"
+          backend/script/new-service.sh --name scaffold-smoke --module example.com/scaffold-smoke \
+            --out "$work_dir/service" --port 9191 --cache valkey --db postgres \
+            --kafka yes --storage s3 --firebase yes --mockoon yes --mocktcp yes
+      - name: Vendor and build
+        run: |
+          cd "$SCAFFOLD_WORK_DIR/service"
+          make tidy vendor
+          docker compose build
+      - name: Verify service and dependencies
+        run: |
+          cd "$SCAFFOLD_WORK_DIR/service"
+          docker compose up --wait --wait-timeout 180
+          curl --fail --silent --show-error --max-time 10 http://localhost:9191/health/liveness
+          docker compose exec -T scaffold-smoke wget -qO- http://mockoon:3000/v1/example/1
+          docker compose exec -T scaffold-smoke wget -qO- http://minio:9000/minio/health/live
+      - name: Show Compose logs on failure
+        if: failure() && env.SCAFFOLD_WORK_DIR != ''
+        run: docker compose --project-directory "$SCAFFOLD_WORK_DIR/service" logs
+      - name: Tear down test stack
+        if: always() && env.SCAFFOLD_WORK_DIR != ''
+        run: |
+          if [ -f "$SCAFFOLD_WORK_DIR/service/docker-compose.yaml" ]; then
+            docker compose --project-directory "$SCAFFOLD_WORK_DIR/service" down --volumes --rmi local
+          fi
+          rm -rf -- "$SCAFFOLD_WORK_DIR"

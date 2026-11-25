@@ -3,7 +3,7 @@
 # blocks matching whatever you enabled there.
 server:
   host: "0.0.0.0"
-  port: "8080"
+  port: "TODO-service-port"
   service_id: "TODO-service-name"
   read_timeout: "30s"
   write_timeout: "30s"

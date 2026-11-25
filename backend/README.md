@@ -55,3 +55,14 @@ script/new-service.sh   generator the scaffold flow and Makefile target both cal
 .kiro/steering/      Kiro-driven questionnaire (ad hoc, any session)
 .kiro/agents/        dedicated scaffolding agent
 ```
+
+## Scaffold verification
+
+From the repository root, run `python3 -B -m unittest discover -s backend/script/tests -v`.
+Docker Compose enables the generated configuration checks. GitHub Actions runs
+these checks on backend changes without private module access.
+
+The Backend scaffold workflow also exposes a manual runtime job on the default
+branch. It needs a Linux runner labeled `backend-scaffold` with Python, Go
+1.26, Make, curl, Docker Compose, and configured access to the private GitLab
+Go module. Run it on a dedicated runner so the fixture's ports are available.

@@ -55,3 +55,10 @@ script/new-service.sh --name my-kyc-flow \
   --module gitlab.awesome-poc-th.com/libero-engineering/auxiliary-systems/ekyc/my-kyc-flow \
   --db postgres --cache redis --mockoon yes
 ```
+
+### Regenerating a service
+
+Use a fresh destination for existing projects and older, unmarked output.
+With `--force`, the generator replaces a marked scaffold after the new output
+has been rendered successfully. This replaces all local changes in that
+directory. The generator rejects Git repositories as replacement targets.

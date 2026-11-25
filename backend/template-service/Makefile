@@ -66,7 +66,7 @@ docker-build: vendor ## Build the Docker image
 	docker build -t $(SERVICE_NAME):local .
 
 docker-run: ## Run the built image standalone
-	docker run --rm -p 8080:8080 --env CONFIG_FILE=/app/config/config.docker-compose.yaml $(SERVICE_NAME):local
+	docker run --rm -p TODO-service-port:TODO-service-port --env CONFIG_FILE=/app/config/config.docker-compose.yaml $(SERVICE_NAME):local
 
 compose-up: ## Start the full local stack (app + whichever infra blocks are enabled)
 	docker compose up --build -d

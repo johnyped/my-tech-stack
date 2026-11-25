@@ -1,4 +1,4 @@
 name: SIT
 variables:
   - name: base_url
-    value: "http://TODO-service-name.sit.internal:8080"
+    value: "http://TODO-service-name.sit.internal:TODO-service-port"

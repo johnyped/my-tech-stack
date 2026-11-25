@@ -1,4 +1,4 @@
 name: UAT
 variables:
   - name: base_url
-    value: "http://TODO-service-name.uat.internal:8080"
+    value: "http://TODO-service-name.uat.internal:TODO-service-port"
