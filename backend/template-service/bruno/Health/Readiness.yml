@@ -1,0 +1,71 @@
+info:
+  name: Readiness
+  type: http
+  seq: 2
+http:
+  method: GET
+  url: "{{base_url}}/health/readiness"
+  body:
+    type: none
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.getStatus()).to.equal(200);
+        });
+
+        test("status is READY", function() {
+          expect(res.getBody().status).to.equal("READY");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Success
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: content-type
+          value: application/json; charset=utf-8
+      body:
+        type: json
+        data: |-
+          {
+            "status": "READY",
+            "service_id": "TODO-service-name"
+          }
+
+docs: |-
+  ## Purpose
+
+  Readiness probe. TODO: once this service has a real dependency (cache/db),
+  update this handler to ping it with a short timeout and return
+  `NOT_READY` / `503` on failure — the template handler always returns
+  `READY` until you do.
+
+  ## Request
+
+  ### Endpoint
+  `GET /health/readiness`
+
+  ## Response
+
+  ### HTTP Status: 200
+
+  #### Body (JSON)
+
+  | Field Name | Type | Mandatory | Description | Possible Value |
+  |---|---|---|---|---|
+  | status | String | Yes | Readiness status. | `READY` / `NOT_READY` |
+  | service_id | String | Yes | From config `server.service_id`. | `TODO-service-name` |
+
+  ## Dependencies
+
+  None yet — add a row per dependency once Readiness actually checks one.

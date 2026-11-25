@@ -1,0 +1,66 @@
+{
+  "uuid": "e1000000-0000-4000-8000-000000000001",
+  "lastMigration": 33,
+  "name": "TODO-service-name-downstreams",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3000,
+  "hostname": "0.0.0.0",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "example-downstream-get",
+      "type": "http",
+      "documentation": "TODO: replace with a real downstream route this service calls, e.g. GET /v1/customer/{id}",
+      "method": "get",
+      "endpoint": "v1/example/:id",
+      "responses": [
+        {
+          "uuid": "example-downstream-get-r1",
+          "body": "{\n  \"status\": \"Success\",\n  \"data\": {\n    \"id\": \"{{urlParam 'id'}}\",\n    \"name\": \"Example\"\n  }\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success",
+          "headers": [
+            { "key": "content-type", "value": "application/json" }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ],
+  "rootChildren": [
+    { "type": "route", "uuid": "example-downstream-get" }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
+  "data": [],
+  "callbacks": []
+}

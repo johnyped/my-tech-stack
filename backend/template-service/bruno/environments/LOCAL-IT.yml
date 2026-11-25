@@ -1,0 +1,6 @@
+name: LOCAL-IT
+variables:
+  - name: base_url
+    value: http://localhost:8080
+  # - name: mockoon_url
+  #   value: http://localhost:3000

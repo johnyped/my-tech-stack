@@ -1,0 +1,191 @@
+# Trimmed, generic GitLab CI pipeline — see document/CICD_GUIDE.md for the
+# full stage breakdown and the private-module-resolution explanation.
+#
+# This is BFF's pipeline with the service-specific bits (fixed-port
+# docker-integration-test parallelism, kafka topic bootstrap, notify webhook
+# targets) stripped to placeholders. If this service has no outbound HTTP
+# calls / no integration test stack yet, delete the
+# `docker-integration-test` job entirely — see CICD_GUIDE.md "What to trim".
+
+stages:
+  - pre-build
+  - build
+  - unit-test
+  - docker-integration-test
+  - build-docker
+  - notify
+
+default:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+variables:
+  GO_VERSION: "1.26"
+  DOCKER_BUILDKIT: "1"
+  ECR_URI: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+  GOMODCACHE: "${CI_PROJECT_DIR}/.gomodcache"
+  GOCACHE: "${CI_PROJECT_DIR}/.gocache"
+  SERVICE_NAME: "TODO-service-name" # TODO: match Makefile's SERVICE_NAME / go.mod module basename
+
+.go_cache: &go_cache
+  cache:
+    key:
+      prefix: "1_go"
+      files:
+        - go.sum
+    paths:
+      - .gomodcache/
+      - .gocache/
+
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+    - when: never
+
+pre-build:
+  stage: pre-build
+  tags: ["linux"]
+  image: public.ecr.aws/docker/library/golang:${GO_VERSION}
+  interruptible: true
+  timeout: 30 minutes
+  <<: *go_cache
+  rules:
+    - when: always
+  before_script:
+    - echo "machine gitlab.awesome-poc-th.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
+    - chmod 600 ~/.netrc
+    - git config --global url."https://gitlab.awesome-poc-th.com/".insteadOf "ssh://git@gitlab.awesome-poc-th.com/"
+    - git config --global url."https://gitlab.awesome-poc-th.com/".insteadOf "git@gitlab.awesome-poc-th.com:"
+    - go env -w GOPRIVATE=gitlab.awesome-poc-th.com
+    - go env -w GOPROXY=http://goproxy-gitlab.awesome-poc-th.com:3000,direct
+  script:
+    - |
+      set -e
+      for i in 1 2 3; do
+        if go mod download -x; then break; fi
+        if [ "${i}" -eq 3 ]; then echo "go mod download failed after 3 attempts" >&2; exit 1; fi
+        sleep $((i * 5))
+      done
+    - go mod vendor -v
+  after_script:
+    - rm -f ~/.netrc
+  artifacts:
+    paths:
+      - vendor/
+    expire_in: 1 day
+
+build:
+  stage: build
+  tags: ["linux"]
+  image: public.ecr.aws/docker/library/golang:${GO_VERSION}
+  interruptible: true
+  timeout: 15 minutes
+  <<: *go_cache
+  needs:
+    - job: pre-build
+      artifacts: true
+  rules:
+    - when: on_success
+  script:
+    - CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o ${SERVICE_NAME} cmd/main.go
+  artifacts:
+    paths:
+      - ${SERVICE_NAME}
+    expire_in: 1 day
+
+unit-test:
+  stage: unit-test
+  tags: ["linux"]
+  image: public.ecr.aws/docker/library/golang:${GO_VERSION}
+  interruptible: true
+  timeout: 25 minutes
+  <<: *go_cache
+  needs:
+    - job: pre-build
+      artifacts: true
+    - job: build
+      artifacts: false
+  rules:
+    - when: on_success
+  script:
+    - go fmt ./...
+    - go vet ./...
+    - go test -mod=vendor -v -race -coverprofile=coverage.out ./...
+    - go tool cover -func=coverage.out | tee coverage_summary.txt
+  coverage: '/total:\s+\(statements\)\s+\d+.\d+%/'
+  artifacts:
+    paths:
+      - coverage.out
+      - coverage_summary.txt
+    expire_in: 1 day
+
+# Delete this job if the service has no outbound HTTP calls / no Bruno
+# integration test stack — see document/MOCKING_GUIDE.md and CICD_GUIDE.md.
+docker-integration-test:
+  stage: docker-integration-test
+  tags: ["linux"]
+  timeout: 30 minutes
+  needs:
+    - job: build
+      artifacts: true
+    - job: pre-build
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+    - when: manual
+      allow_failure: true
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl python3
+    - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    - apt-get install -y nodejs
+    - npm install -g @mockoon/cli @usebruno/cli
+  script:
+    - |
+      set -euo pipefail
+      chmod +x ./script/integration/run-integration-tests.sh
+      ./script/integration/run-integration-tests.sh \
+        --scenarios-file test/integration/scenarios.yaml \
+        --env LOCAL-IT
+
+build-docker:
+  stage: build-docker
+  tags: ["linux"]
+  image: docker:24-dind
+  timeout: 20 minutes
+  needs:
+    - job: build
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+  script:
+    - docker build -t ${ECR_URI}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA} .
+    - docker push ${ECR_URI}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA}
+
+notify-success:
+  stage: notify
+  tags: ["linux"]
+  image: alpine:3.21
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+  script:
+    - echo "TODO: post pipeline success to chat webhook"
+
+notify-failure:
+  stage: notify
+  tags: ["linux"]
+  image: alpine:3.21
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_failure
+  script:
+    - echo "TODO: post pipeline failure to chat webhook"

@@ -1,0 +1,108 @@
+info:
+  name: Get Example
+  type: http
+  seq: 1
+http:
+  method: GET
+  url: "{{base_url}}/v1/examples/{{example_id}}"
+  body:
+    type: none
+  auth: inherit
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Response has NEO envelope fields", function() {
+          const body = res.getBody();
+          expect(body).to.have.property("status");
+          expect(body).to.have.property("service_id");
+          expect(body).to.have.property("message");
+          expect(body).to.have.property("data");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Success
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: content-type
+          value: application/json; charset=utf-8
+      body:
+        type: json
+        data: |-
+          {
+            "status": "Success",
+            "service_id": "TODO-service-name",
+            "message": "OK",
+            "data": {
+              "id": "example-123",
+              "name": "Example"
+            }
+          }
+  - name: Not Found
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: content-type
+          value: application/json; charset=utf-8
+      body:
+        type: json
+        data: |-
+          {
+            "status": "Error",
+            "service_id": "TODO-service-name",
+            "message": "example not found",
+            "data": null
+          }
+
+docs: |-
+  ## Purpose
+
+  TODO — replace this file with your real first endpoint. This exists only
+  to show the request-file shape new domain endpoints should follow; delete
+  it once you have a real one. Everything after this gets generated/updated
+  by `skill::bruno-service-docs` once your routes exist — don't hand-maintain
+  this folder once that skill is wired up.
+
+  ## Request
+
+  ### Endpoint
+  `GET /v1/examples/{{example_id}}`
+
+  | Field Name | Type | Mandatory | Description | Possible Value |
+  |---|---|---|---|---|
+  | example_id | String | Yes | Path parameter. | `example-123` |
+
+  ## Response
+
+  ### HTTP Status: 200
+
+  #### Body (JSON)
+
+  | Field Name | Type | Mandatory | Description | Possible Value |
+  |---|---|---|---|---|
+  | status | String | Yes | Response status. | `Success` |
+  | service_id | String | Yes | Service identifier. | `TODO-service-name` |
+  | message | String | Yes | Response message. | `OK` |
+  | data.id | String | Yes | Example ID. | `example-123` |
+  | data.name | String | Yes | Example name. | `Example` |
+
+  ### HTTP Status: 404
+
+  Returned when `example_id` doesn't exist.
+
+  ## Dependencies
+
+  None — delete this section or fill it in once this endpoint calls another service.

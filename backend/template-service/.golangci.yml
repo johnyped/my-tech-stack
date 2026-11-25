@@ -1,0 +1,79 @@
+# golangci-lint v2 configuration. Adopted from ekyc-service's hand-migration
+# of BFF's original v1 ruleset — see document/TECH_STACK.md "Tooling".
+# If you're starting from a service that still has a v1-format .golangci.yml,
+# migrate it the same way: drop golint/maligned/gomnd/exportloopref/typecheck,
+# move govet.check-shadowing to settings.govet.enable-all, and convert
+# run.skip-dirs to the exclusions.paths list below.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - goprintffuncname
+    - gosec
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+  settings:
+    dupl:
+      threshold: 100
+    funlen:
+      lines: 100
+      statements: 50
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    gocyclo:
+      min-complexity: 15
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - gocyclo
+          - dupl
+          - goconst
+    paths:
+      - vendor
+      - test
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name

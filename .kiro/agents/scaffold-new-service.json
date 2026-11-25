@@ -1,0 +1,98 @@
+{
+  "name": "scaffold-new-service",
+  "description": "Dedicated scaffolding agent — walks the new-service questionnaire and generates a service from this repo's blueprint. Locked down to this workspace plus sibling output directories only.",
+  "prompt": "file://./prompts/scaffold-new-service.md",
+  "mcpServers": {},
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "skill"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "read",
+    "write",
+    "shell",
+    "skill"
+  ],
+  "resources": [
+    "file://backend/document/SCAFFOLD_CHECKLIST.md",
+    "file://backend/document/MOCKING_GUIDE.md",
+    "file://backend/document/CICD_GUIDE.md",
+    "file://backend/document/TECH_STACK.md",
+    "file://.kiro/steering/scaffold-new-service.md",
+    "file://.kiro/steering/scaffold/*.md"
+  ],
+  "hooks": {},
+  "toolsSettings": {
+    "read": {
+      "allowedPaths": [
+        "./**",
+        "../*/**"
+      ]
+    },
+    "write": {
+      "allowedPaths": [
+        "./**",
+        "../*/**"
+      ]
+    },
+    "shell": {
+      "denyByDefault": true,
+      "allowedCommands": [
+        "backend/script/new-service.sh",
+        "python3",
+        "make",
+        "go",
+        "gofmt",
+        "curl"
+      ]
+    }
+  },
+  "includeMcpJson": false,
+  "model": null,
+  "permissions": {
+    "rules": [
+      {
+        "capability": "shell",
+        "match": [
+          "backend/script/new-service.sh",
+          "python3",
+          "make",
+          "go",
+          "gofmt",
+          "curl"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": ["*"],
+        "exclude": [
+          "backend/script/new-service.sh",
+          "python3",
+          "make",
+          "go",
+          "gofmt",
+          "curl"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_read",
+        "match": ["./**", "../*/**"],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": ["./**", "../*/**"],
+        "effect": "allow"
+      },
+      {
+        "capability": "skill",
+        "effect": "allow"
+      }
+    ]
+  }
+}

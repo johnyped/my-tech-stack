@@ -1,0 +1,170 @@
+# Full local stack. Every optional block below is commented out — uncomment
+# only what your service's checklist answer says you need (see
+# document/SCAFFOLD_CHECKLIST.md). `script/new-service.sh` does this
+# uncommenting for you automatically based on your --cache/--db/--kafka/
+# --storage/--mockoon flags; this file is the hand-edit fallback.
+services:
+  TODO-service-name:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: TODO-service-name
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_FILE=/app/config/config.docker-compose.yaml
+    volumes:
+      - ./config/config.docker-compose.yaml:/app/config/config.docker-compose.yaml:ro
+    networks:
+      - service-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # Uncomment per enabled infra block below:
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
+    #   postgres:
+    #     condition: service_healthy
+    #   kafka:
+    #     condition: service_healthy
+
+  # --- Cache / session store — enable if your service needs Redis/Valkey session,
+  # rate-limit, or distributed-lock state (checklist: --cache redis|valkey) ---
+  # >>> CACHE
+  # redis:
+  #   image: redis:7-alpine
+  #   command: redis-server --requirepass password --appendonly yes
+  #   ports:
+  #     - "${REDIS_PORT:-6379}:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - service-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+  #   restart: unless-stopped
+  # <<< CACHE
+
+  # --- Relational DB — enable if your service persists data to Postgres
+  # (checklist: --db postgres) ---
+  # >>> DB
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: service
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: TODO-service-name
+  #   ports:
+  #     - "${POSTGRES_PORT:-5432}:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - service-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U service"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+  # <<< DB
+
+  # --- Object storage — enable if your service reads/writes S3 objects
+  # (checklist: --storage s3); MinIO is the local S3-compatible stand-in ---
+  # >>> STORAGE
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: minio
+  #   command: server /data --console-address ":9001"
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   volumes:
+  #     - minio-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  # <<< STORAGE
+
+  # --- Event streaming — enable if your service produces/consumes Kafka topics
+  # (checklist: --kafka yes). KRaft mode, no Zookeeper. ---
+  # >>> KAFKA
+  # kafka:
+  #   image: apache/kafka:4.1.0
+  #   ports:
+  #     - "${KAFKA_PORT:-9092}:9092"
+  #     - "${KAFKA_EXTERNAL_PORT:-29092}:29092"
+  #   environment:
+  #     KAFKA_NODE_ID: 1
+  #     KAFKA_PROCESS_ROLES: broker,controller
+  #     KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+  #     KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:29092
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+  #     KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  #     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     CLUSTER_ID: "q1Sh-9_ISia_zwGINzRvyQ"
+  #   volumes:
+  #     - kafka-data:/tmp/kraft-combined-logs
+  #   networks:
+  #     - service-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+  #     interval: 15s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 30s
+  # kafka-ui:
+  #   image: provectuslabs/kafka-ui:latest
+  #   ports:
+  #     - "${KAFKA_UI_PORT:-8090}:8080"
+  #   environment:
+  #     KAFKA_CLUSTERS_0_NAME: local
+  #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #   networks:
+  #     - service-network
+  # <<< KAFKA
+
+  # --- HTTP downstream mocking — enable only if your service calls another
+  # HTTP service AND needs more than one response shape across test scenarios
+  # (checklist: --mockoon yes; see document/MOCKING_GUIDE.md §2 decision rule) ---
+  # >>> MOCKOON
+  # mockoon:
+  #   image: mockoon/cli:latest
+  #   command: ["--data", "/data/scenario.json", "--port", "3000"]
+  #   volumes:
+  #     - ./test/integration/mockoon:/data:ro
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - service-network
+  # <<< MOCKOON
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  minio-data:
+    driver: local
+  kafka-data:
+    driver: local
+
+networks:
+  service-network:
+    driver: bridge

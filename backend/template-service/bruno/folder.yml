@@ -1,0 +1,12 @@
+info:
+  name: TODO Service Name
+  type: folder
+  seq: 1
+request:
+  headers:
+    - name: Content-Type
+      value: application/json
+  # Only add an Authorization header here if this service sits behind its
+  # own auth (not just Kong/API gateway) — see bruno-service-docs's rule.
+  # - name: Authorization
+  #   value: "Bearer {{auth_token}}"

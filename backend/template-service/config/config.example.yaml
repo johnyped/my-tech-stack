@@ -1,0 +1,74 @@
+# Copy to config.yaml for local dev (`make config-init` does this).
+# Never commit real credentials — use env var interpolation (viper's
+# AutomaticEnv + BindEnv) for anything secret, even in config.yaml.
+server:
+  host: "0.0.0.0"
+  port: "8080"
+  service_id: "TODO-service-name"
+  read_timeout: "30s"
+  write_timeout: "30s"
+
+logger:
+  level: "debug" # debug | info | warn | error
+  encoding: "console" # console (dev) | json (prod)
+
+# --- Uncomment the blocks matching your checklist answers. ---
+
+# >>> CACHE
+# cache_database:  # --cache redis|valkey
+#   mode: "redis"
+#   redis:
+#     host: "localhost"
+#     port: "6379"
+#     password: "${REDIS_PASSWORD}"
+#     database: 0
+#     pool_size: 10
+#     use_tls: false
+#     dial_timeout: "5s"
+#     read_timeout: "5s"
+# <<< CACHE
+
+# >>> DB
+# database:  # --db postgres
+#   mode: "postgres"
+#   postgres:
+#     host: "localhost"
+#     port: "5432"
+#     username: "service"
+#     password: "${POSTGRES_PASSWORD}"
+#     database: "TODO-service-name"
+#     schema: "public"
+#     sslmode: "disable"
+#     max_open_conns: 25
+#     max_idle_conns: 5
+#     conn_max_lifetime: "5m"
+# <<< DB
+
+# >>> KAFKA
+# kafka:  # --kafka yes
+#   brokers:
+#     - "localhost:9092"
+#   producer_topic: "TODO-service-name-events"
+# <<< KAFKA
+
+# >>> STORAGE
+# storage:  # --storage s3
+#   s3:
+#     endpoint: "http://localhost:9000" # MinIO locally; real S3 endpoint in deployed envs
+#     bucket: "TODO-service-name"
+#     region: "ap-southeast-7"
+#     access_key: "${S3_ACCESS_KEY}"
+#     secret_key: "${S3_SECRET_KEY}"
+# <<< STORAGE
+
+# >>> FIREBASE
+# firebase:  # --firebase yes
+#   credentials_file: "${FIREBASE_CREDENTIALS_FILE}"
+# <<< FIREBASE
+
+# >>> MOCKOON
+# downstreams:  # --mockoon yes — point at Mockoon locally, the real service elsewhere
+#   example_service:
+#     base_url: "http://localhost:3000"
+#     timeout: "10s"
+# <<< MOCKOON

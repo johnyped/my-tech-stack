@@ -1,0 +1,60 @@
+# Used by `make run-docker` / docker-compose.yaml. Hostnames match the
+# service names in docker-compose.yaml, not "localhost" — uncomment the
+# blocks matching whatever you enabled there.
+server:
+  host: "0.0.0.0"
+  port: "8080"
+  service_id: "TODO-service-name"
+  read_timeout: "30s"
+  write_timeout: "30s"
+
+logger:
+  level: "debug"
+  encoding: "console"
+
+# >>> CACHE
+# cache_database:
+#   mode: "redis"
+#   redis:
+#     host: "redis"
+#     port: "6379"
+#     password: "password"
+#     database: 0
+# <<< CACHE
+
+# >>> DB
+# database:
+#   mode: "postgres"
+#   postgres:
+#     host: "postgres"
+#     port: "5432"
+#     username: "service"
+#     password: "password"
+#     database: "TODO-service-name"
+#     schema: "public"
+#     sslmode: "disable"
+# <<< DB
+
+# >>> KAFKA
+# kafka:
+#   brokers:
+#     - "kafka:9092"
+#   producer_topic: "TODO-service-name-events"
+# <<< KAFKA
+
+# >>> STORAGE
+# storage:
+#   s3:
+#     endpoint: "http://minio:9000"
+#     bucket: "TODO-service-name"
+#     region: "ap-southeast-7"
+#     access_key: "minioadmin"
+#     secret_key: "minioadmin"
+# <<< STORAGE
+
+# >>> MOCKOON
+# downstreams:
+#   example_service:
+#     base_url: "http://mockoon:3000"
+#     timeout: "10s"
+# <<< MOCKOON

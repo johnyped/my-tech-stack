@@ -1,0 +1,23 @@
+# Scenario registry — single source of truth, pattern from ekyc-service.
+# Each scenario = Mockoon dataset(s) + one ordered Bruno folder under
+# `bruno/Integration Tests/`. Adding a scenario never requires touching the
+# runner scripts — just add an entry here and the matching Bruno folder.
+#
+# Delete this file (and test/integration/mockoon/) if this service's
+# checklist answer for Mockoon is no — see document/MOCKING_GUIDE.md §2.
+scenarios:
+  - name: "Health"
+    mockoon:
+      - downstreams.json
+    bruno_folder: "Health"
+
+  - name: "Example Flow"
+    mockoon:
+      - downstreams.json
+    bruno_folder: "Integration Tests/Example Flow"
+
+  # Add a "-variant.json" dataset + new scenario entry for each alternate
+  # response shape you need (not-found, downstream-5xx, slow response, ...).
+  # See MOCKOON.md in skill::bruno-integration-test for the SEQUENTIAL
+  # multi-response pattern if a single scenario needs more than one shape
+  # across its own steps.
