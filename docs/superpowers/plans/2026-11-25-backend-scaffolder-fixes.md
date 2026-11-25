@@ -1,6 +1,6 @@
 # Backend scaffolder fixes
 
-Fix output safety and make every generated service use consistent names, ports, and dependency settings. Keep the existing CLI entry points and work-platform defaults. The portable preset can be a separate follow-up if personal reuse warrants it.
+Fix output safety and make every generated service use consistent names, ports, and dependency settings. Keep the existing CLI entry points.
 
 ## 1. Protect the output directory
 
@@ -29,13 +29,12 @@ Fix output safety and make every generated service use consistent names, ports, 
 ## 4. Run scaffold smoke tests in CI
 
 - [x] Run `python3 -m unittest discover -s backend/script/tests` on the review pipeline. Generate minimal, Redis, and custom-port full-option Valkey services in temporary directories. Check rendered values, enabled services, and files referenced by Compose, then run `docker compose config --quiet` for each fixture.
-- [x] Add a separate runtime check on a runner with access to the private Go module. Run the generated service's `make vendor`, build the container, start it, and require HTTP 200 from `/health/liveness`. Exercise the selected dependency containers in the full-option fixture and tear the stack down afterward.
+- [x] Add a separate runtime check on a GitHub-hosted runner. Run the generated service's `make tidy vendor`, build the container, start it, and require HTTP 200 from `/health/liveness`. Exercise the selected dependency containers in the full-option fixture and tear the stack down afterward.
 
-**Acceptance.** Static checks run without private module access. The authenticated runtime job verifies boot and health, and reports dependency or startup failures separately from rendering failures.
+**Acceptance.** Static checks cover rendering and Compose configuration. The runtime job verifies boot and health, and reports dependency or startup failures separately from rendering failures.
 
 ## Verification status
 
 Eight local regression tests passed, including Compose validation for minimal,
-Redis, and full-option Valkey output. The full runtime acceptance check is
-pending on an authenticated runner. Local vendoring stalled while fetching the
-private common-lib module, whose HTTPS Git endpoint requires authentication.
+Redis, and full-option Valkey output. The generated service builds with public
+dependencies. The CI job exercises the containerized runtime check.

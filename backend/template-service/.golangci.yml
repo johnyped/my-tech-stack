@@ -76,4 +76,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name
+        - example.com/TODO-service-name

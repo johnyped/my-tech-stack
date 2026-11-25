@@ -6,7 +6,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 
-	"gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name/internal/handler/health"
+	"example.com/TODO-service-name/internal/handler/health"
 )
 
 // RegisterHealthRoutes mounts the liveness, readiness, and ping probes.

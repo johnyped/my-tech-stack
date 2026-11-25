@@ -11,7 +11,7 @@ change a question here, update the flag/prompt in all three.
 | Question | Flag | Notes |
 |---|---|---|
 | Service name | `--name` | kebab-case, becomes the binary name and container name |
-| Module path | `--module` | full `gitlab.awesome-poc-th.com/libero-engineering/<group>/<name>` path — see TECH_STACK.md's module-naming note; never defaulted |
+| Module path | `--module` | full Go module path (for example, `example.com/team/my-service`) — see TECH_STACK.md's module-naming note; never defaulted |
 | Port | `--port` | default `8080` if not given |
 
 ## Infra checklist (each is yes/no, default no)
@@ -32,7 +32,7 @@ the app, same as BFF's actual stack.
 
 ## What never gets asked (fixed by the blueprint, not a choice)
 
-- `core/common-lib.git/v2` dependency — always added (COMMON_LIB_GUIDE.md)
+- Local request ID middleware and a Zap logger (see REQUEST_UTILITIES.md)
 - Health endpoints (`/health/liveness`, `/health/readiness`, `/ping`) — always present
 - `golangci-lint` v2 config — always included
 - CI/CD stage skeleton — always included; trim stages per CICD_GUIDE.md's "what to trim" note if the service turns out to be a leaf service
@@ -43,16 +43,16 @@ the app, same as BFF's actual stack.
 ```bash
 # Leaf service, no infra: sms-service shape
 script/new-service.sh --name my-sms-relay \
-  --module gitlab.awesome-poc-th.com/libero-engineering/core/my-sms-relay
+  --module example.com/team/my-sms-relay
 
 # BFF-shape: cache + kafka + storage, calls other HTTP services
 script/new-service.sh --name my-bff \
-  --module gitlab.awesome-poc-th.com/libero-engineering/core/my-bff \
+  --module example.com/team/my-bff \
   --cache redis --kafka yes --storage s3 --mockoon yes
 
 # ekyc-shape: DB + cache, calls other HTTP services
 script/new-service.sh --name my-kyc-flow \
-  --module gitlab.awesome-poc-th.com/libero-engineering/auxiliary-systems/ekyc/my-kyc-flow \
+  --module example.com/identity/my-kyc-flow \
   --db postgres --cache redis --mockoon yes
 ```
 

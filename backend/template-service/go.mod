@@ -1,8 +1,4 @@
-// TODO: replace with the real module path.
-// gitlab.awesome-poc-th.com/libero-engineering/<group>/<service-name>
-// <group> = "core" for platform-wide services, "auxiliary-systems/<system>"
-// for a system-specific one. See document/TECH_STACK.md "Module naming".
-module gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name
+module example.com/TODO-service-name
 
 go 1.26.0
 
@@ -12,7 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
-	gitlab.awesome-poc-th.com/libero-engineering/core/common-lib.git/v2 v2.3.1
+	go.uber.org/zap v1.27.0
 )
 
 // Added by `script/new-service.sh` based on your infra checklist answers —
@@ -20,7 +16,7 @@ require (
 // if you're hand-editing this file instead of using the generator.
 //
 // >>> CACHE
-// require github.com/redis/go-redis/v9 v9.17.1 // --cache redis
+// require github.com/redis/go-redis/v9 v9.17.1 // --cache redis|valkey
 // <<< CACHE
 // >>> DB
 // require github.com/jackc/pgx/v5 v5.11.0 // --db postgres

@@ -1,7 +1,6 @@
 // Package health implements the liveness and readiness probes every service
 // exposes — see document/ARCHITECTURE.md "Health checks". Responses are
-// deliberately not wrapped in the common-lib stdresp envelope: health probes
-// have their own minimal contract, used by Docker HEALTHCHECK and k8s probes.
+// use a minimal JSON contract consumed by Docker and Kubernetes probes.
 package health
 
 import (

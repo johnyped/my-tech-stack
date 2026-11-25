@@ -16,13 +16,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	commonmiddleware "gitlab.awesome-poc-th.com/libero-engineering/core/common-lib.git/v2/middleware"
-
-	"gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name/config"
-	"gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name/internal/handler/health"
-	"gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name/internal/routes"
-	"gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name/internal/server"
-	pkglogger "gitlab.awesome-poc-th.com/libero-engineering/TODO-group/TODO-service-name/pkg/logger"
+	"example.com/TODO-service-name/config"
+	"example.com/TODO-service-name/internal/handler/health"
+	"example.com/TODO-service-name/internal/middleware"
+	"example.com/TODO-service-name/internal/routes"
+	"example.com/TODO-service-name/internal/server"
+	pkglogger "example.com/TODO-service-name/pkg/logger"
 )
 
 func main() {
@@ -57,8 +56,7 @@ func newRouter(cfg *config.Config) *gin.Engine {
 	router := gin.New()
 
 	router.Use(
-		commonmiddleware.CorrelationIdMiddleware(), // extracts/generates x-correlation-id per request
-		commonmiddleware.RequestIdMiddleware(),     // generates fresh x-request-id per request
+		middleware.RequestIDs(),
 		gin.Recovery(),
 	)
 	router.Use(func(c *gin.Context) {

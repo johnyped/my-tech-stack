@@ -16,7 +16,7 @@ pre-build → build → unit-test → [docker-integration-test] → build-docker
 
 | Stage | Does | Runs when |
 |---|---|---|
-| `pre-build` | `go mod download` (with retry) + `go mod vendor`, using `GOPRIVATE`/`GOPROXY` so private modules (`common-lib.git/v2`, etc.) resolve; uploads `vendor/` as an artifact for later stages | every pipeline |
+| `pre-build` | `go mod download` (with retry) + `go mod vendor`, using public Go modules; uploads module metadata and `vendor/` as artifacts for later stages | every pipeline |
 | `build` | compiles the binary with `-mod=vendor`, consuming the `vendor/` artifact from `pre-build` | every pipeline |
 | `unit-test` | `go test ./...` with coverage | every pipeline |
 | `docker-integration-test` | `docker compose -f docker-compose.integration.yaml up`, runs Bruno against it (see MOCKING_GUIDE.md) | services with integration tests wired up |
@@ -33,25 +33,11 @@ in-flight pipeline when a newer commit lands on that same ref (an MR's
 previous run, or main's previous run) — it does not touch other refs'
 pipelines.
 
-## Private module resolution (the part that's easy to get wrong)
+## Dependency vendoring
 
-Every service depends on at least `core/common-lib.git/v2`, which lives on
-the same private GitLab instance the pipeline runs on. `pre-build` sets this
-up before `go mod download`:
-
-```yaml
-before_script:
-  - echo "machine gitlab.awesome-poc-th.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
-  - chmod 600 ~/.netrc
-  - git config --global url."https://gitlab.awesome-poc-th.com/".insteadOf "ssh://git@gitlab.awesome-poc-th.com/"
-  - git config --global url."https://gitlab.awesome-poc-th.com/".insteadOf "git@gitlab.awesome-poc-th.com:"
-  - go env -w GOPRIVATE=gitlab.awesome-poc-th.com
-  - go env -w GOPROXY=http://goproxy-gitlab.awesome-poc-th.com:3000,direct
-```
-
-`vendor/` is then committed-via-artifact through the rest of the pipeline
-(not re-fetched), which is also why local `make docker-build` depends on
-`make vendor` first — see TECH_STACK.md's "Why vendoring."
+The pre-build job resolves public Go modules and publishes the module metadata
+and `vendor/` directory as artifacts for later jobs. Use `make tidy vendor`
+before building a generated service image locally.
 
 ## Go module / build cache
 

@@ -16,5 +16,4 @@
   dependency configuration.
 - Verify backend scaffold changes from the repo root with
   `python3 -B -m unittest discover -s backend/script/tests -v`.
-  Docker Compose is required for the Compose checks. A full Go build and
-  liveness check require access to the private work-platform module.
+  Docker Compose is required for the Compose checks. Run `make tidy vendor` from a generated service before building its Docker image.

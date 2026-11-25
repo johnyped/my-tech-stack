@@ -1,5 +1,5 @@
 # Trimmed, generic GitLab CI pipeline — see document/CICD_GUIDE.md for the
-# full stage breakdown and the private-module-resolution explanation.
+# full stage breakdown and the dependency vendoring explanation.
 #
 # This is BFF's pipeline with the service-specific bits (fixed-port
 # docker-integration-test parallelism, kafka topic bootstrap, notify webhook
@@ -58,13 +58,6 @@ pre-build:
   <<: *go_cache
   rules:
     - when: always
-  before_script:
-    - echo "machine gitlab.awesome-poc-th.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
-    - chmod 600 ~/.netrc
-    - git config --global url."https://gitlab.awesome-poc-th.com/".insteadOf "ssh://git@gitlab.awesome-poc-th.com/"
-    - git config --global url."https://gitlab.awesome-poc-th.com/".insteadOf "git@gitlab.awesome-poc-th.com:"
-    - go env -w GOPRIVATE=gitlab.awesome-poc-th.com
-    - go env -w GOPROXY=http://goproxy-gitlab.awesome-poc-th.com:3000,direct
   script:
     - |
       set -e
@@ -73,12 +66,14 @@ pre-build:
         if [ "${i}" -eq 3 ]; then echo "go mod download failed after 3 attempts" >&2; exit 1; fi
         sleep $((i * 5))
       done
+    - go mod tidy
     - go mod vendor -v
-  after_script:
-    - rm -f ~/.netrc
+    - test -f go.sum
   artifacts:
     paths:
       - vendor/
+      - go.mod
+      - go.sum
     expire_in: 1 day
 
 build:
@@ -161,8 +156,10 @@ build-docker:
   image: docker:24-dind
   timeout: 20 minutes
   needs:
-    - job: build
+    - job: pre-build
       artifacts: true
+    - job: build
+      artifacts: false
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_TAG

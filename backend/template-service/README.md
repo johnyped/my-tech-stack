@@ -7,7 +7,7 @@ service's once you're done wiring it up.
 
 Find-and-replace these, in this order:
 
-1. Replace the full placeholder Go module path everywhere it appears,
+1. Replace the full placeholder Go module path (`example.com/TODO-service-name`) everywhere it appears,
    including imports in Go files. See `document/TECH_STACK.md` for module naming.
 2. Replace the remaining service-name placeholder with your kebab-case name
    and the service-port placeholder with your port (normally `8080`).
@@ -17,7 +17,7 @@ Find-and-replace these, in this order:
    - `mocktcp/` (no `--mocktcp yes`)
    - `test/integration/mockoon/`, `test/integration/scenarios.yaml` (no `--mockoon yes`)
    - the matching commented blocks in `docker-compose.yaml` / `config/*.yaml`
-4. Run `make setup && make config-init && make run` and confirm
+4. Run `make tidy && make setup && make config-init && make run` and confirm
    `curl localhost:TODO-service-port/health/liveness` returns `200`.
 5. Once you have real routes, load `skill::bruno-service-docs` to generate
    `bruno/` for real, and `skill::bruno-integration-test` to replace the

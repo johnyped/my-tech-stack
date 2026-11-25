@@ -44,7 +44,7 @@ clean: ## Remove build artifacts
 lint: ## Run golangci-lint
 	golangci-lint run
 
-vendor: ## Vendor dependencies (required before docker build; needs local creds for private modules)
+vendor: ## Vendor dependencies (required before docker build)
 	go mod vendor -v
 
 tidy: ## Tidy go modules

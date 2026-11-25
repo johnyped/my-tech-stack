@@ -10,7 +10,7 @@ services on this platform, derived from a review of 8 existing services:
 This is not 8 separate reviews. It's one converged standard — where the 8
 services agreed, that's the standard; where `backend-for-frontend` (BFF)
 disagreed with the rest, the majority convention wins for anything
-cross-cutting (see [COMMON_LIB_GUIDE.md](document/COMMON_LIB_GUIDE.md)).
+cross-cutting (see [REQUEST_UTILITIES.md](document/REQUEST_UTILITIES.md)).
 
 ## Start here
 
@@ -18,7 +18,7 @@ cross-cutting (see [COMMON_LIB_GUIDE.md](document/COMMON_LIB_GUIDE.md)).
 |---|---|
 | Understand the layering / request flow / adapter pattern | [document/ARCHITECTURE.md](document/ARCHITECTURE.md) |
 | See the full tech stack (frameworks, libs, infra) and why | [document/TECH_STACK.md](document/TECH_STACK.md) |
-| Know what `core/common-lib.git/v2` gives me vs. local `pkg/` | [document/COMMON_LIB_GUIDE.md](document/COMMON_LIB_GUIDE.md) |
+| Understand the template logger and middleware | [document/REQUEST_UTILITIES.md](document/REQUEST_UTILITIES.md) |
 | Mock a downstream dependency in tests | [document/MOCKING_GUIDE.md](document/MOCKING_GUIDE.md) |
 | Set up or understand the CI/CD pipeline | [document/CICD_GUIDE.md](document/CICD_GUIDE.md) |
 | See the new-service questionnaire as a spec | [document/SCAFFOLD_CHECKLIST.md](document/SCAFFOLD_CHECKLIST.md) |
@@ -37,7 +37,7 @@ calling the same generator, so none of them can drift from the others.
    ```bash
    script/new-service.sh \
      --name my-new-service \
-     --module gitlab.awesome-poc-th.com/libero-engineering/core/my-new-service \
+     --module example.com/my-new-service \
      --cache redis --db postgres --kafka no --storage no --mockoon no --mocktcp no --firebase no
    ```
 3. **Kiro-driven** — open this workspace in Kiro and say "scaffold a new
@@ -49,7 +49,7 @@ calling the same generator, so none of them can drift from the others.
 ## Repo layout
 
 ```
-document/            architecture, tech stack, common-lib, mocking, CI/CD guides
+document/            architecture, tech stack, middleware, mocking, CI/CD guides
 template-service/    copy/paste-able skeleton (the actual scaffold)
 script/new-service.sh   generator the scaffold flow and Makefile target both call
 .kiro/steering/      Kiro-driven questionnaire (ad hoc, any session)
@@ -60,9 +60,8 @@ script/new-service.sh   generator the scaffold flow and Makefile target both cal
 
 From the repository root, run `python3 -B -m unittest discover -s backend/script/tests -v`.
 Docker Compose enables the generated configuration checks. GitHub Actions runs
-these checks on backend changes without private module access.
+these checks on backend changes.
 
 The Backend scaffold workflow also exposes a manual runtime job on the default
-branch. It needs a Linux runner labeled `backend-scaffold` with Python, Go
-1.26, Make, curl, Docker Compose, and configured access to the private GitLab
-Go module. Run it on a dedicated runner so the fixture's ports are available.
+branch. It vendors the public Go dependencies, builds the service, and checks
+liveness and the selected local dependencies.

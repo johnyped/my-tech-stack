@@ -1,5 +1,5 @@
-// Package logger is a thin local wrapper around zap, pre-configured to match
-// common-lib's log schema (timestamp/level/msg/caller keys, service name
+// Package logger is a thin local wrapper around zap, configured with a shared
+// log schema (timestamp/level/msg/caller keys, service name
 // baked into every line). Pattern copied from ekyc-service's pkg/logger —
 // every service keeps a facade like this rather than calling zap directly,
 // so logger construction stays a one-line package-level call in main.go.
@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// schemaVersion matches common-lib's log schema version.
+// schemaVersion identifies the log schema version.
 const schemaVersion = "1.0"
 
 // Config holds logger initialization parameters.

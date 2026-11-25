@@ -22,12 +22,12 @@ service, not to any single service's exact version.
 | Concern | Library | Notes |
 |---|---|---|
 | Config loading | `spf13/viper` | base `config.yaml` + env override via `CONFIG_FILE` |
-| Structured logging | `go.uber.org/zap`, wrapped by `common-lib.git/v2/logger` | don't call zap directly in handlers — use the common-lib wrapper so log shape is consistent across services |
+| Structured logging | `go.uber.org/zap` via `pkg/logger` | don't call zap directly in handlers — use the local logger so log shape is consistent across services |
 | Request validation | `go-playground/validator/v10` | struct tag validation on request-bound structs |
-| Error types | `core/common-lib.git/v2/errorcodes` + `stderr` | not `cockroachdb/errors` (BFF-only, not adopted — see ARCHITECTURE.md) |
-| Response envelope | `core/common-lib.git/v2/stdresp` | the NEO envelope: `status` / `service_id` / `message` / `data` |
-| Context propagation | `core/common-lib.git/v2/ctxutils` | request-id, trace-id helpers |
-| Common middleware | `core/common-lib.git/v2/middleware` | request-id injection, recovery, access log |
+| Error types | Go errors | map domain errors to HTTP responses in handlers |
+| Response envelope | Service-defined JSON | for example, `status` / `service_id` / `message` / `data` |
+| Context propagation | Request context | request-id, trace-id helpers |
+| Common middleware | Local Gin middleware | request IDs and Gin recovery |
 
 ## Data & infra clients
 
@@ -56,26 +56,12 @@ service, not to any single service's exact version.
 
 ## Why vendoring
 
-Every service depends on at least one private module under
-`gitlab.awesome-poc-th.com/...` (`core/common-lib.git/v2` at minimum). CI
-runners and Docker builds don't carry the credentials to fetch private Go
-modules at build time, so `vendor/` is committed and `go build -mod=vendor`
-is used everywhere. `make vendor` must run (and succeed, with local
-credentials) before `make docker-build`.
+Run `make tidy vendor` in a generated service before building its Docker
+image. The Docker build reads from `vendor/` with `-mod=vendor`, so Go
+dependencies are resolved before the image build starts.
 
-## Module naming — no fixed convention today, pick deliberately
+## Module naming
 
-The 8 services disagree on this:
-
-- Plain name, no path: `backend-for-frontend`, `push-notification-service`, `ekyc-service`
-- Wrong/placeholder path: `github.com/neo/sms-service`
-- Real gitlab group path: `gitlab.awesome-poc-th.com/libero-engineering/core/email-gateway`, `.../core/as400adapter`, `.../auxiliary-systems/ekyc/face-verification-service`
-
-For a new service, use the real gitlab group path
-(`gitlab.awesome-poc-th.com/libero-engineering/<group>/<service-name>`) —
-plain names and placeholder paths both break `go get` for anyone depending on
-this service later. Pick `<group>` to match where the service actually lives
-in GitLab (`core` for platform-wide services, `auxiliary-systems/<system>`
-for a system-specific one, by precedent from face-verification-service and
-ekyc-service). The scaffold generator's `--module` flag requires this as
-input rather than defaulting it — see SCAFFOLD_CHECKLIST.md.
+Pass the intended repository path to `--module`, for example
+`github.com/your-org/my-service`. For a local example, use
+`example.com/my-service`. The generator updates the module and local imports.

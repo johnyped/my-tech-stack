@@ -7,7 +7,7 @@ as well.
 
 | Area | Contents |
 |---|---|
-| [`backend/`](backend/) | Go backend service blueprint — architecture, tech stack, common-lib usage, mocking strategy, CI/CD, scaffold-able `template-service/` |
+| [`backend/`](backend/) | Go backend service blueprint — architecture, tech stack, request middleware, mocking strategy, CI/CD, scaffold-able `template-service/` |
 | [`mobile/`](mobile/) | Mobile frontend blueprint — Swift / SwiftUI (iOS) and Kotlin / Jetpack Compose (Android) |
 | [`web/`](web/) | Web frontend blueprint — Vite + bun + Vue 3 + TypeScript + shadcn UI + Tailwind CSS |
 
@@ -18,7 +18,7 @@ From the repository root, run:
 ```sh
 backend/script/new-service.sh \
   --name my-service \
-  --module gitlab.awesome-poc-th.com/libero-engineering/core/my-service
+  --module example.com/my-service
 ```
 
 The generator creates a sibling directory by default. Use `--out` to choose a
@@ -42,16 +42,13 @@ python3 -B -m unittest discover -s backend/script/tests -v
 
 Install Docker Compose to run the configuration checks for the minimal, Redis,
 and full-option Valkey fixtures. The [Backend scaffold workflow](.github/workflows/backend-scaffold.yml)
-runs these checks on backend changes. Its manual runtime job requires a
-[runner with private Go module access](backend/README.md#scaffold-verification).
+runs these checks on backend changes. The [manual runtime job](backend/README.md#scaffold-verification)
+builds and starts a generated service using public Go modules.
 
 ## Provenance / adaptation notes
 
-- The backend area is copied-and-adapted from `~/Github/tcr-tech-stack` and
-  retains the work platform’s conventions. Its references to internal hosts
-  (`gitlab.awesome-poc-th.com`, `core/common-lib.git/v2`, the NEO envelope)
-  are that work platform's conventions — keep them when scaffolding work
-  services, genericise them when reusing a skeleton elsewhere.
+- The backend blueprint was adapted from `tcr-tech-stack`. The scaffold uses
+  public Go modules and local request middleware.
 - [`mobile/`](mobile/document/TECH_STACK.md) and [`web/`](web/document/TECH_STACK.md)
   are the personal-stack choices above, written in the same blueprint style
   as the backend docs.

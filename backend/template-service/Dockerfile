@@ -4,8 +4,7 @@ FROM public.ecr.aws/docker/library/golang:1.26-alpine AS builder
 WORKDIR /app
 
 # Copy go mod files and the pre-vendored dependency tree (run `make vendor`
-# locally/in CI before this — private modules can't be fetched from inside
-# the build, see document/TECH_STACK.md "Why vendoring")
+# locally or in CI before building the image)
 COPY go.mod go.sum ./
 COPY vendor/ vendor/
 

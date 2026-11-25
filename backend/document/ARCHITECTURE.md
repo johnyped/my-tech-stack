@@ -10,16 +10,16 @@ internal/       everything private to this service
   handler/      Gin handlers — HTTP in/out only, no business logic
   <domain>/     one package per business capability (see "Domain packages" below)
   models/       request/response/domain structs
-  middleware/   request-id, logging, recovery, auth — usually re-exported from common-lib
+  middleware/   request IDs and other HTTP middleware
   routes/       route registration, grouped by prefix
   server/       http.Server setup, TLS, timeouts
 config/         config.yaml + env-specific overrides (config.docker-compose.yaml, config.integration-test.yaml, ...)
-pkg/            code this service owns and could share, but doesn't depend on common-lib
+pkg/            reusable service-owned code such as the Zap logger
 bruno/          API docs + integration tests (see MOCKING_GUIDE.md)
 document/       architecture notes, API docs, deployment handoff, release notes
 db/             migrations + sqlc queries (only services with a relational DB)
 test/           integration test fixtures (Mockoon datasources, scenarios)
-vendor/         vendored deps (mandatory — see TECH_STACK.md on private modules)
+vendor/         vendored dependencies used by the Docker build
 ```
 
 ## Request flow
@@ -49,8 +49,8 @@ HTTP request
   → handler/ binds + validates request and calls the actor
   → actor applies business rules and calls the aggregator where needed
   → client performs downstream I/O (HTTP / DB / Kafka / SDK)
-  → actor returns a result or a common-lib error
-  → handler/ maps that to an HTTP response via common-lib/stdresp
+  → actor returns a result or a domain error
+  → handler/ maps that to an HTTP response using the service's JSON contract
 ```
 
 The handler layer is intentionally thin. Business logic, branching, and
@@ -110,16 +110,3 @@ override, selected via the `CONFIG_FILE` env var (e.g.
 `CONFIG_FILE=/app/config/config.docker-compose.yaml`). Secrets are never
 committed — they're injected as env vars or mounted files at deploy time, per
 `CICD_GUIDE.md`.
-
-## Where BFF diverges from the other 7 (and why the blueprint doesn't follow it there)
-
-| Area | BFF (master) does | The other 7 do | Blueprint follows |
-|---|---|---|---|
-| Shared cross-cutting lib | local `pkg/` only, no `core/common-lib.git/v2` | `core/common-lib.git/v2` for logger/errors/response/middleware | the 7 — see COMMON_LIB_GUIDE.md |
-| Downstream mocking | in-process Go `mockservice/` package | Mockoon + `scenarios.yaml` (ekyc-service) | both, different purposes — see MOCKING_GUIDE.md |
-| Error type | `cockroachdb/errors` | common-lib's `errorcodes` / `stderr` | the 7 |
-
-Everything else in this document — layering, the adapter pattern, health
-checks, config loading, Bruno/CI conventions — is BFF's pattern, adopted as
-the master reference because the other 7 either match it already or have no
-competing convention of their own.
