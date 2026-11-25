@@ -24,14 +24,32 @@ vendor/         vendored deps (mandatory — see TECH_STACK.md on private module
 
 ## Request flow
 
+### Clean layered architecture
+
+**Routes → Handler → Actor → Aggregator → Client**
+
+| Layer | Responsibility |
+|---|---|
+| Routes | Register endpoints and attach middleware. |
+| Handler | Bind and validate HTTP input, invoke the actor, and map the result to an HTTP response. |
+| Actor | Execute the use case and apply business rules. |
+| Aggregator | Coordinate downstream client calls and combine their results for the actor. |
+| Client | Handle downstream I/O and translate protocol-specific requests, responses, and errors. |
+
+The flow shows the full call chain. A use case with a single downstream
+operation can call its client directly when there is no coordination to do.
+Wire the layers in `cmd/main.go` and inject the dependencies into their callers.
+
+### HTTP request lifecycle
+
 ```
 HTTP request
   → middleware (request-id, structured logging, panic recovery, auth)
   → routes/ dispatch to handler/
-  → handler/ binds + validates request, calls into a domain package
-  → domain package holds business logic, calls adapters for anything external
-  → adapters (HTTP client / DB / Kafka producer / SDK wrapper) do the actual I/O
-  → domain package returns a result or a common-lib error
+  → handler/ binds + validates request and calls the actor
+  → actor applies business rules and calls the aggregator where needed
+  → client performs downstream I/O (HTTP / DB / Kafka / SDK)
+  → actor returns a result or a common-lib error
   → handler/ maps that to an HTTP response via common-lib/stdresp
 ```
 
